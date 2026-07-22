@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mihome-gw"
+version = "1.0.0"
+description = "Xiaomi Gateway (mihome) listener proxy for Home Assistant - Python rewrite with asyncio"
+requires-python = ">=3.11"
+dependencies = [
+    "paho-mqtt>=2.0.0",
+    "pycryptodome>=3.20.0",
+]
+
+[project.scripts]
+mihome-gw = "mihome_gw.__main__:main"

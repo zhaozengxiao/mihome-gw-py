@@ -1,0 +1,1 @@
+"""mihome-gw - Xiaomi Gateway listener proxy for Home Assistant (Python rewrite)."""

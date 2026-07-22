@@ -1,0 +1,20 @@
+# Xiaomi Gateway (mihome) 监听代理 (Python)
+# 在 Docker 主机上以独立容器运行
+#
+# 管理命令:
+#   启动/重建:  docker compose up -d
+#   停止:       docker compose down
+#   重启:       docker compose restart
+#   看日志:     docker compose logs -f
+#
+# 配置修改: 编辑 data/options.json 后 docker compose restart
+
+services:
+  mihome-gw:
+    build: .
+    image: mihome-gw-py:latest
+    container_name: mihome-gw-py
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
