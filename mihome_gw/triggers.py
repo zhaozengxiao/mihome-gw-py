@@ -66,9 +66,9 @@ class TriggerEngine:
         # 门从关→开后，短时间内抑制人体触发，防止人出门后立即被再次触发
         self._door_open_cooldown: dict[str, float] = {}
 
-        # cooldown 时长(ms)，默认 3000ms
+        # cooldown 时长(ms)，默认 5000ms
         self._door_open_cooldown_ms = (
-            config.doorOpenCooldownMs if config.doorOpenCooldownMs > 0 else 3000
+                    config.doorOpenCooldownMs if config.doorOpenCooldownMs > 0 else 5000
         )
 
         # 每个网关上次刷新 token 的时间戳

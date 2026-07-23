@@ -55,6 +55,7 @@ class App:
         self.mqtt_client = None
         self.last_message_time = time.time()
         self._shutdown = False
+        self._loop: asyncio.AbstractEventLoop | None = None
 
     def setup_output(self):
         """Initialize the output backend."""
@@ -105,7 +106,16 @@ class App:
         except Exception:
             pass
 
-        asyncio.get_event_loop().call_later(0.5, lambda: self._do_control(sensor, attr, v))
+        if self._loop is None or self._loop.is_closed():
+            logger.error("[mqtt] 控制失败: 主事件循环不可用")
+            return
+        self._loop.call_soon_threadsafe(
+            self._schedule_control, sensor, attr, v
+        )
+
+    def _schedule_control(self, sensor, attr: str, value):
+        if self._loop is not None and not self._loop.is_closed():
+            self._loop.call_later(0.5, self._do_control, sensor, attr, value)
 
     def _do_control(self, sensor, attr, value):
         try:
@@ -214,6 +224,7 @@ class App:
 
     async def run(self):
         """Start the application."""
+        self._loop = asyncio.get_running_loop()
         self.setup_output()
 
         self.hub = Hub(

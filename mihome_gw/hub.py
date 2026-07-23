@@ -1,12 +1,17 @@
 """UDP multicast Hub — listens to Xiaomi Gateway messages."""
 
 import asyncio
-import fcntl
 import json
 import logging
 import os
 import socket
 import struct
+import sys
+
+if sys.platform == "linux":
+    import fcntl
+else:
+    fcntl = None
 
 from Crypto.Cipher import AES
 
@@ -104,6 +109,8 @@ class Hub:
                     joined = False
                     # Enumerate all non-loopback IPv4 interfaces via ioctl
                     try:
+                        if fcntl is None:
+                            raise OSError("interface ioctl is unavailable on this platform")
                         SIOCGIFADDR = 0x8915
                         SIOCGIFFLAGS = 0x8913
                         IFF_LOOPBACK = 0x8
@@ -156,10 +163,13 @@ class Hub:
                 self.hub._state = "CLOSED"
 
         loop = asyncio.get_event_loop()
+        endpoint_options = {}
+        if sys.platform != "win32":
+            endpoint_options["reuse_port"] = True
         transport, _ = await loop.create_datagram_endpoint(
             lambda: HubProtocol(self),
             local_addr=(self.bind, self.port),
-            reuse_port=True,
+            **endpoint_options,
         )
         return transport
 
