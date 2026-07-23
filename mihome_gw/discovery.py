@@ -104,7 +104,8 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
 
         msgs.append({"topic": f"homeassistant/switch/{sid}_ch0/config", "payload": {
             "name": _device_name(sid, model) + " CH0",
-            "state_topic": state_topic, "value_template": "{{{{ value_json.{0} }}}}".format(attr0),
+            "state_topic": state_topic,
+            "value_template": "{{ value_json.%s | string | lower }}" % attr0,
             "command_topic": f"{cmd_topic}/{attr0}",
             "payload_on": "true", "payload_off": "false",
             "state_on": "true", "state_off": "false",
@@ -113,7 +114,8 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
         if not has_ch0:
             msgs.append({"topic": f"homeassistant/switch/{sid}_ch1/config", "payload": {
                 "name": _device_name(sid, model) + " CH1",
-                "state_topic": state_topic, "value_template": "{{ value_json.channel_1 }}",
+                "state_topic": state_topic,
+                "value_template": "{{ value_json.channel_1 | string | lower }}",
                 "command_topic": f"{cmd_topic}/channel_1",
                 "payload_on": "true", "payload_off": "false",
                 "state_on": "true", "state_off": "false",
@@ -284,7 +286,8 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
         msgs += [
             {"topic": f"homeassistant/switch/{sid}_ch0/config", "payload": {
                 "name": _device_name(sid, model) + " CH0",
-                "state_topic": state_topic, "value_template": "{{ value_json.channel_0 }}",
+                "state_topic": state_topic,
+                "value_template": "{{ value_json.channel_0 | string | lower }}",
                 "command_topic": f"{cmd_topic}/channel_0",
                 "payload_on": "true", "payload_off": "false",
                 "state_on": "true", "state_off": "false",
@@ -292,7 +295,8 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
             }},
             {"topic": f"homeassistant/switch/{sid}_ch1/config", "payload": {
                 "name": _device_name(sid, model) + " CH1",
-                "state_topic": state_topic, "value_template": "{{ value_json.channel_1 }}",
+                "state_topic": state_topic,
+                "value_template": "{{ value_json.channel_1 | string | lower }}",
                 "command_topic": f"{cmd_topic}/channel_1",
                 "payload_on": "true", "payload_off": "false",
                 "state_on": "true", "state_off": "false",

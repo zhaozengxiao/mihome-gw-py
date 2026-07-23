@@ -23,6 +23,7 @@ class MqttOutput:
         self.client.on_message = self._on_message
         self.client.on_disconnect = self._on_disconnect
         self.discovered: set[str] = set()
+        self.discovery_messages: list[dict] = []
         self._connected = False
 
     def _on_connect(self, client, userdata, flags, reason_code, properties):
@@ -30,6 +31,13 @@ class MqttOutput:
             self._connected = True
             logger.info("[mqtt] connected")
             client.subscribe(self.prefix + "cmd/#")
+            for message in self.discovery_messages:
+                client.publish(
+                    message["topic"],
+                    json.dumps(message["payload"]),
+                    qos=0,
+                    retain=True,
+                )
         else:
             logger.error(f"[mqtt] connect failed: {reason_code}")
 
@@ -79,8 +87,12 @@ class MqttOutput:
             return
         self.discovered.add(key)
         msgs = build_discovery(sid, model, self.prefix)
+        self.discovery_messages.extend(msgs)
         for m in msgs:
-            self.client.publish(m["topic"], json.dumps(m["payload"]), qos=0, retain=True)
+            if self._connected:
+                self.client.publish(
+                    m["topic"], json.dumps(m["payload"]), qos=0, retain=True
+                )
             logger.info(f"[mqtt] discovery: {m['topic']}")
 
 

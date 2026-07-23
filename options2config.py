@@ -17,7 +17,7 @@ def main():
 
     door_cooldown = int(opt.get("doorOpenCooldownMs", 0))
     if door_cooldown <= 0:
-        door_cooldown = 3000
+            door_cooldown = 5000
 
     mqtt_user = opt.get("mqtt_user", "")
     mqtt_password = opt.get("mqtt_password", "")

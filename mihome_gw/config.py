@@ -38,7 +38,7 @@ class Config:
     bind: str = "0.0.0.0"
     debug: bool = False
     enable_triggers: bool = True
-    doorOpenCooldownMs: int = 3000
+    doorOpenCooldownMs: int = 5000
     heartbeatTimeout: int = 120
     rediscoverInterval: int = 60
     gateways: list[GatewayConfig] = field(default_factory=list)
@@ -55,7 +55,7 @@ class Config:
         config.bind = data.get("bind", "0.0.0.0")
         config.debug = data.get("debug", False)
         config.enable_triggers = data.get("enable_triggers", True)
-        config.doorOpenCooldownMs = int(data.get("doorOpenCooldownMs", 3000))
+        config.doorOpenCooldownMs = int(data.get("doorOpenCooldownMs", 5000))
         config.heartbeatTimeout = data.get("heartbeatTimeout", 120)
         config.rediscoverInterval = data.get("rediscoverInterval", 60)
 
@@ -82,7 +82,7 @@ class Config:
 
         door_cooldown = int(opt.get("doorOpenCooldownMs", 0))
         if door_cooldown <= 0:
-            door_cooldown = 3000
+                    door_cooldown = 5000
 
         mqtt_user = opt.get("mqtt_user", "")
         mqtt_password = opt.get("mqtt_password", "")
