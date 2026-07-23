@@ -244,7 +244,7 @@ class TriggerEngine:
         """
         if rule.get("doorGuard"):
             self._held_by_door[rule["doorGuard"]] = False
-        delay = (rule.get("delay") or 10) * 1000
+        delay = (rule.get("delay") or 30) * 1000
         key = self._rule_key(rule)
         if key in self._timers:
             self._timers[key].cancel()
@@ -321,9 +321,10 @@ class TriggerEngine:
                 logger.info(f"[trigger] {rule.get('name', '')}: cooldown中, 跳过")
                 continue
 
-            # 跳过：已在保持状态
+            # 已在保持状态：人还在活动，重置定时器，继续等门开
             if dg and self._held_by_door.get(dg):
-                logger.info(f"[trigger] {rule.get('name', '')}: 已在保持状态, 跳过")
+                self._schedule_off(rule)
+                logger.info(f"[trigger] {rule.get('name', '')}: 已在保持状态, 重置定时器")
                 continue
 
             # 处理已有定时器
