@@ -25,12 +25,12 @@ CONFIG_PATH = os.environ.get("CONFIG_PATH", os.path.join(os.path.dirname(__file_
 
 DEFAULT_RULES = [
     {
-        "name": "人体开灯-10秒延时关",
+        "name": "人体开灯-30秒延时关",
         "match": {"sid": "158d000258361c", "attr": "state", "equals": True},
         "target": {"sid": "158d0002b062cd", "attr": "channel_0"},
         "onValue": True,
         "offValue": False,
-        "delay": 10,
+        "delay": 30,
         "doorGuard": "158d00032b73ec",
     }
 ]
