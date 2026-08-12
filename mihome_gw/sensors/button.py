@@ -29,9 +29,10 @@ class Button(BaseSensor):
         status = data.get("status")
         if status is not None:
             action = {
-                "click": "click",
-                "double_click": "double_click",
-                "long_click_press": "long_click_press",
+                "click": "danji",
+                "double_click": "shuangji",
+                "long_click_press": "changan",
+                "long_click": "changan",
             }.get(status)
             if action:
                 obj["action"] = action

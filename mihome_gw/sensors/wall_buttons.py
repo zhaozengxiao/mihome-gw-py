@@ -4,6 +4,14 @@ import asyncio
 
 from .base import BaseSensor
 
+# remote.b186acn01 / b286acn01 等上报的 channel_* 动作值
+_ACTION_MAP = {
+    "click": "danji",
+    "double_click": "shuangji",
+    "long_click_press": "changan",
+    "long_click": "changan",
+}
+
 
 class WallButtons(BaseSensor):
     """Xiaomi Wireless Remote Switch (Wall Buttons)."""
@@ -17,6 +25,10 @@ class WallButtons(BaseSensor):
             0.5, lambda: self.hub.emit("data", self.sid, self.className, {"action": "idle"})
         )
 
+    @staticmethod
+    def _action_for(value) -> str:
+        return _ACTION_MAP.get(str(value), str(value))
+
     def get_data(self, data: dict) -> dict | None:
         new_data = False
         obj = {}
@@ -28,28 +40,25 @@ class WallButtons(BaseSensor):
 
         channel_0 = data.get("channel_0")
         if channel_0 is not None:
-            if channel_0 == "click":
-                obj["action"] = "channel_0"
-                self._schedule_reset()
-                new_data = True
+            obj["action"] = self._action_for(channel_0)
+            self._schedule_reset()
+            new_data = True
 
         channel_1 = data.get("channel_1")
         if channel_1 is not None:
-            if channel_1 == "click":
-                obj["action"] = "channel_1"
-                self._schedule_reset()
-                new_data = True
+            obj["action"] = f"channel_1_{self._action_for(channel_1)}"
+            self._schedule_reset()
+            new_data = True
 
         dual_channel = data.get("dual_channel")
         if dual_channel is not None:
-            if dual_channel == "click":
-                obj["action"] = "both"
-                self._schedule_reset()
-                new_data = True
+            obj["action"] = f"both_{self._action_for(dual_channel)}"
+            self._schedule_reset()
+            new_data = True
 
         status = data.get("status")
         if status is not None:
-            obj["action"] = "click"
+            obj["action"] = self._action_for(status)
             self._schedule_reset()
             new_data = True
 
