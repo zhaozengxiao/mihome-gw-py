@@ -29,7 +29,7 @@ class Cube(BaseSensor):
 
         status = data.get("status")
         if status is not None:
-            obj["action"] = status
+            obj["action"] = str(status).lower()
             self._schedule_reset()
             new_data = True
 

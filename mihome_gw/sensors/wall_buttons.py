@@ -27,7 +27,7 @@ class WallButtons(BaseSensor):
 
     @staticmethod
     def _action_for(value) -> str:
-        return _ACTION_MAP.get(str(value), str(value))
+        return _ACTION_MAP.get(str(value), str(value).lower())
 
     def get_data(self, data: dict) -> dict | None:
         new_data = False
