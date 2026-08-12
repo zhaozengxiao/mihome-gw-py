@@ -278,10 +278,15 @@ function renderRules(){
         '<select data-f="match.equals" style="flex:1"><option value="true"'+('true'==String(m.equals)?' selected':'')+'>true</option><option value="false"'+('false'==String(m.equals)?' selected':'')+'>false</option></select></div></td>'+
       '<td><select class="sid-sel" data-f="target.sid" data-cur="'+esc(t.sid)+'" onchange="syncSid(this)"></select>'+
         '<select data-f="target.attr" style="margin-top:2px"><option value="channel_0"'+('channel_0'==t.attr?' selected':'')+'>channel_0</option><option value="channel_1"'+('channel_1'==t.attr?' selected':'')+'>channel_1</option><option value="state"'+('state'==t.attr?' selected':'')+'>state</option></select></td>'+
-      '<td><select class="sid-sel" data-f="condition.sid" data-cur="'+esc(c.sid||'')+'" onchange="syncSid(this)"></select>'+
-        '<div style="display:flex;gap:2px;margin-top:2px">'+
-        '<select data-f="condition.attr" style="flex:1"><option value="">(attr)</option><option value="state"'+('state'==c.attr?' selected':'')+'>state</option><option value="channel_0"'+('channel_0'==c.attr?' selected':'')+'>ch0</option></select>'+
-        '<select data-f="condition.equals" style="flex:1"><option value="">(=)</option><option value="true"'+('true'==String(c.equals)?' selected':'')+'>true</option><option value="false"'+('false'==String(c.equals)?' selected':'')+'>false</option></select></div></td>'+
+      '<td>'+(r.condition
+        ? '<select class="sid-sel" data-f="condition.sid" data-cur="'+esc(c.sid)+'" onchange="syncSid(this)"></select>'+
+          '<div style="display:flex;gap:2px;margin-top:2px">'+
+          '<select data-f="condition.attr" style="flex:1"><option value="state"'+('state'==c.attr?' selected':'')+'>state</option><option value="channel_0"'+('channel_0'==c.attr?' selected':'')+'>ch0</option></select>'+
+          '<select data-f="condition.equals" style="flex:1"><option value="true"'+('true'==String(c.equals)?' selected':'')+'>true</option><option value="false"'+('false'==String(c.equals)?' selected':'')+'>false</option></select>'+
+          '</div><button class="btn-ghost btn-sm" style="margin-top:2px" onclick="toggleCondition('+i+')" title="移除前置条件">− 移除</button>'
+        : '<span class="muted" style="font-size:11px">无前置条件</span> '+
+          '<button class="btn-ghost btn-sm" onclick="toggleCondition('+i+')">+ 添加</button>'
+      )+'</td>'+
       '<td><input data-f="onValue" value="'+esc(r.onValue)+'" placeholder="开" style="margin-bottom:2px">'+
         '<input data-f="offValue" value="'+esc(r.offValue)+'" placeholder="关"></td>'+
       '<td><input data-f="delay" value="'+esc(r.delay)+'" type="number" step="1" style="width:50px"></td>'+
@@ -312,8 +317,11 @@ function collectRules(){
     };
     const d=g('delay').value; if(d!=='') r.delay=parseInt(d,10);
     const dg=g('doorGuard').value.trim(); if(dg!=='') r.doorGuard=dg;
-    const cs=g('condition.sid').value.trim(),ca=g('condition.attr').value,ce=g('condition.equals').value;
-    if(cs&&ca&&ce) r.condition={sid:cs,attr:ca,equals:norm(ce)};
+    const csEl=g('condition.sid'),caEl=g('condition.attr'),ceEl=g('condition.equals');
+    if(csEl&&caEl&&ceEl){
+      const cs=csEl.value.trim(),ca=caEl.value,ce=ceEl.value;
+      if(cs&&ca&&ce) r.condition={sid:cs,attr:ca,equals:norm(ce)};
+    }
     const ts=g('tiStart').value.trim(),te=g('tiEnd').value.trim();
     if(ts||te) r.timeInactive={start:ts,end:te};
     if(r.name&&r.match.sid&&r.target.sid) out.push(r);
@@ -322,6 +330,11 @@ function collectRules(){
 }
 
 function toggleRule(i){rules[i].enabled=!rules[i].enabled;renderRules()}
+function toggleCondition(i){
+  if(rules[i].condition){delete rules[i].condition}
+  else{rules[i].condition={sid:'',attr:'state',equals:true}}
+  renderRules()
+}
 function addRule(){rules.push({name:'',match:{sid:'',attr:'state',equals:true},target:{sid:'',attr:'channel_0'},onValue:true,offValue:false,delay:30,enabled:true});renderRules()}
 function removeRule(i){rules.splice(i,1);renderRules()}
 
