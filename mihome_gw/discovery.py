@@ -55,7 +55,7 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
         msgs += [
             {"topic": f"homeassistant/binary_sensor/{sid}/config", "payload": {
                 "name": _device_name(sid, model), "device_class": "door",
-                "state_topic": state_topic, "value_template": "{{ value_json.state }}",
+                "state_topic": state_topic, "value_template": "{{ value_json.state | string | lower }}",
                 "payload_on": "true", "payload_off": "false",
                 "unique_id": sid, "device": dev,
             }},
@@ -72,7 +72,7 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
         msgs += [
             {"topic": f"homeassistant/binary_sensor/{sid}/config", "payload": {
                 "name": _device_name(sid, model), "device_class": "motion",
-                "state_topic": state_topic, "value_template": "{{ value_json.state }}",
+                "state_topic": state_topic, "value_template": "{{ value_json.state | string | lower }}",
                 "payload_on": "true", "payload_off": "false",
                 "unique_id": sid, "device": dev,
             }},
@@ -160,7 +160,7 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
             }},
             {"topic": f"homeassistant/binary_sensor/{sid}_conn/config", "payload": {
                 "name": f"Gateway {sid} connected", "device_class": "connectivity",
-                "state_topic": state_topic, "value_template": "{{ value_json.connected }}",
+                "state_topic": state_topic, "value_template": "{{ value_json.connected | string | lower }}",
                 "payload_on": "true", "payload_off": "false",
                 "unique_id": f"{sid}_conn", "device": dev,
             }},
@@ -211,7 +211,7 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
         msgs += [
             {"topic": f"homeassistant/binary_sensor/{sid}/config", "payload": {
                 "name": _device_name(sid, model), "device_class": dev_class,
-                "state_topic": state_topic, "value_template": "{{ value_json.state }}",
+                "state_topic": state_topic, "value_template": "{{ value_json.state | string | lower }}",
                 "payload_on": "true", "payload_off": "false",
                 "unique_id": sid, "device": dev,
             }},
@@ -257,7 +257,7 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
         msgs += [
             {"topic": f"homeassistant/binary_sensor/{sid}/config", "payload": {
                 "name": _device_name(sid, model), "device_class": "vibration",
-                "state_topic": state_topic, "value_template": "{{ value_json.state }}",
+                "state_topic": state_topic, "value_template": "{{ value_json.state | string | lower }}",
                 "payload_on": "true", "payload_off": "false",
                 "unique_id": sid, "device": dev,
             }},
@@ -274,7 +274,7 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
         msgs += [
             {"topic": f"homeassistant/binary_sensor/{sid}/config", "payload": {
                 "name": _device_name(sid, model), "device_class": "moisture",
-                "state_topic": state_topic, "value_template": "{{ value_json.state }}",
+                "state_topic": state_topic, "value_template": "{{ value_json.state | string | lower }}",
                 "payload_on": "true", "payload_off": "false",
                 "unique_id": sid, "device": dev,
             }},
