@@ -35,12 +35,14 @@ def load_config() -> Config:
 class App:
     """Main application."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, config_path: str | None = None):
         self.config = config
+        self.config_path = config_path or CONFIG_PATH
         self.hub: Hub | None = None
         self.triggers: TriggerEngine | None = None
         self.output = None
         self.mqtt_client = None
+        self.webui = None
         self.last_message_time = time.time()
         self._shutdown = False
         self._loop: asyncio.AbstractEventLoop | None = None
@@ -125,6 +127,7 @@ class App:
             rules,
             self.config,
         )
+        logger.info(f"[mihome] 规则已加载: {len(rules)} 条")
 
     def bind_events(self):
         """Bind hub events to output."""
@@ -245,10 +248,23 @@ class App:
         if not self.config.gateways:
             logger.warning("[mihome] 未配置网关 (gateways 为空), 仅能接收组播消息, 无法发送控制指令")
 
+        # 启动 WebUI
+        if self.config.web_enabled:
+            try:
+                from .webui import WebUI
+                self.webui = WebUI(self, self.config_path,
+                                   port=self.config.web_port,
+                                   bind=self.config.web_bind)
+                await self.webui.start()
+            except Exception as e:
+                logger.error(f"[webui] 启动失败: {e}")
+
         await self._health_check()
 
     async def shutdown(self):
         self._shutdown = True
+        if self.webui:
+            await self.webui.stop()
         if self.hub:
             await self.hub.stop()
         if self.mqtt_client:
@@ -257,7 +273,7 @@ class App:
 
 def main():
     config = load_config()
-    app = App(config)
+    app = App(config, config_path=CONFIG_PATH)
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

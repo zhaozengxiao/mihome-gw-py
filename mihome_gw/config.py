@@ -41,6 +41,9 @@ class Config:
     doorOpenCooldownMs: int = 5000
     heartbeatTimeout: int = 120
     rediscoverInterval: int = 60
+    web_enabled: bool = True
+    web_port: int = 8080
+    web_bind: str = "0.0.0.0"
     gateways: list[GatewayConfig] = field(default_factory=list)
     output: OutputConfig = field(default_factory=OutputConfig)
     rules: list[dict] = field(default_factory=list)
@@ -58,6 +61,9 @@ class Config:
         config.doorOpenCooldownMs = int(data.get("doorOpenCooldownMs", 5000))
         config.heartbeatTimeout = data.get("heartbeatTimeout", 120)
         config.rediscoverInterval = data.get("rediscoverInterval", 60)
+        config.web_enabled = data.get("web_enabled", True)
+        config.web_port = int(data.get("web_port", 8080))
+        config.web_bind = data.get("web_bind", "0.0.0.0")
 
         config.gateways = [
             GatewayConfig(ip=g["ip"], key=g["key"], sid=g.get("sid", ""))
