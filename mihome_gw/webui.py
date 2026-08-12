@@ -52,14 +52,15 @@ hr{border:none;border-top:1px solid #eee;margin:12px 0}
       <button class="btn-ghost btn-sm" onclick="loadRules()">刷新</button>
     </div>
   </div>
-  <table id="rules"><thead><tr>
-    <th style="width:100px">名称</th>
-    <th style="width:180px">触发 (传感器)</th>
-    <th style="width:180px">目标 (设备)</th>
-    <th style="width:120px">动作</th>
-    <th style="width:70px">延时(s)</th>
-    <th style="width:100px">门磁</th>
-    <th></th>
+<table id=\"rules\"><thead><tr>
+    <th style=\"width:90px\">名称</th>
+    <th style=\"width:170px\">触发</th>
+    <th style=\"width:170px\">目标</th>
+    <th style=\"width:90px\">动作</th>
+    <th style=\"width:55px\">延时</th>
+    <th style=\"width:100px\">门磁</th>
+    <th style=\"width:130px\">不执行时段</th>
+    <th style=\"width:40px\"></th>
   </tr></thead><tbody></tbody></table>
   <div style="margin-top:12px;text-align:right">
     <button class="btn-success btn-sm" onclick="saveRules()">保存规则</button>
@@ -135,7 +136,7 @@ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'
 function render(){
   const tb=document.querySelector('#rules tbody');tb.innerHTML='';
   if(!rules.length){tb.innerHTML='<tr><td colspan="7" class="muted">暂无规则</td></tr>';return}
-  rules.forEach((r,i)=>{
+  function tiStr(r){const t=r.timeInactive||{};return (t.start||'')+'~'+(t.end||'')}
     const m=r.match||{},t=r.target||{};
     const tr=document.createElement('tr');
     tr.innerHTML=`
@@ -149,11 +150,12 @@ function render(){
         <input data-f="target.attr" value="${esc(t.attr)}" placeholder="attr"></td>
       <td><input data-f="onValue" value="${esc(r.onValue)}" placeholder="开" style="margin-bottom:3px">
         <input data-f="offValue" value="${esc(r.offValue)}" placeholder="关"></td>
-      <td><input data-f="delay" value="${esc(r.delay)}" type="number" step="1"></td>
-      <td><input data-f="doorGuard" value="${esc(r.doorGuard)}" placeholder="SID" style="margin-bottom:3px">
-        <div style="display:flex;gap:3px">
-          <input data-f="timeInactive.start" value="${esc((r.timeInactive||{}).start)}" placeholder="不执行起" style="flex:1">
-          <input data-f="timeInactive.end" value="${esc((r.timeInactive||{}).end)}" placeholder="不执行止" style="flex:1">
+      <td><input data-f="delay" value="${esc(r.delay)}" type="number" step="1" style="width:50px"></td>
+      <td><input data-f="doorGuard" value="${esc(r.doorGuard)}" placeholder="门磁SID"></td>
+      <td><div style="display:flex;gap:3px;align-items:center">
+          <input data-f="timeInactive.start" value="${esc((r.timeInactive||{}).start)}" placeholder="22:00" style="flex:1;width:55px">
+          <span>~</span>
+          <input data-f="timeInactive.end" value="${esc((r.timeInactive||{}).end)}" placeholder="06:00" style="flex:1;width:55px">
         </div></td>
       <td><button class="btn-danger btn-sm" onclick="removeRule(${i})">×</button></td>`;
     tb.appendChild(tr);
