@@ -5,7 +5,7 @@ from aiohttp import web
 
 logger = logging.getLogger(__name__)
 
-HTML = r"""<!DOCTYPE html>
+HTML = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
