@@ -127,6 +127,34 @@ class TriggerEngine:
         cur = self._get_val(sensor, cond["attr"])
         return str(cur) == str(cond["equals"])
 
+    @staticmethod
+    def _is_time_inactive(rule: dict) -> bool:
+        """检查当前时间是否在规则指定的不执行时段内.
+
+        规则字段: timeInactive: {"start": "22:00", "end": "06:00"}
+        支持跨午夜时段 (start > end 表示跨天).
+        """
+        ti = rule.get("timeInactive")
+        if not ti:
+            return False
+        start = ti.get("start")
+        end = ti.get("end")
+        if not start or not end:
+            return False
+        try:
+            h, m = start.split(":")
+            start_min = int(h) * 60 + int(m)
+            h, m = end.split(":")
+            end_min = int(h) * 60 + int(m)
+        except (ValueError, AttributeError):
+            return False
+        now = time.localtime()
+        now_min = now.tm_hour * 60 + now.tm_min
+        if start_min <= end_min:
+            return start_min <= now_min < end_min
+        else:
+            return now_min >= start_min or now_min < end_min
+
     def _apply_control(self, rule: dict, value):
         """
         向目标设备发送控制指令。
@@ -317,6 +345,13 @@ class TriggerEngine:
             # 跳过：前置条件不满足
             if not self._check_condition(rule):
                 logger.info(f"[trigger] {rule.get('name', '')}: 条件不满足, 跳过")
+                continue
+
+            # 跳过：不在允许的时间段内
+            if self._is_time_inactive(rule):
+                logger.info(
+                    f"[trigger] {rule.get('name', '')}: 当前时间在不执行时段内, 跳过"
+                )
                 continue
 
             # 跳过：门磁 cooldown 窗口内

@@ -150,7 +150,11 @@ function render(){
       <td><input data-f="onValue" value="${esc(r.onValue)}" placeholder="开" style="margin-bottom:3px">
         <input data-f="offValue" value="${esc(r.offValue)}" placeholder="关"></td>
       <td><input data-f="delay" value="${esc(r.delay)}" type="number" step="1"></td>
-      <td><input data-f="doorGuard" value="${esc(r.doorGuard)}" placeholder="SID"></td>
+      <td><input data-f="doorGuard" value="${esc(r.doorGuard)}" placeholder="SID" style="margin-bottom:3px">
+        <div style="display:flex;gap:3px">
+          <input data-f="timeInactive.start" value="${esc((r.timeInactive||{}).start)}" placeholder="不执行起" style="flex:1">
+          <input data-f="timeInactive.end" value="${esc((r.timeInactive||{}).end)}" placeholder="不执行止" style="flex:1">
+        </div></td>
       <td><button class="btn-danger btn-sm" onclick="removeRule(${i})">×</button></td>`;
     tb.appendChild(tr);
   });
@@ -164,6 +168,8 @@ function collect(){
     const d=g('delay').value, dg=g('doorGuard').value.trim();
     if(d!=='')r.delay=parseInt(d,10);
     if(dg!=='')r.doorGuard=dg;
+    const ts=g('timeInactive.start').value, te=g('timeInactive.end').value;
+    if(ts||te)r.timeInactive={start:ts.trim(),end:te.trim()};
     if(r.name&&r.match.sid&&r.target.sid)out.push(r)});
   return out;
 }
