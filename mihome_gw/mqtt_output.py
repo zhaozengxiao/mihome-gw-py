@@ -107,21 +107,24 @@ class ConsoleOutput:
 
 
 class WebhookOutput:
-    """HTTP webhook output."""
+    """HTTP webhook output (标准库 urllib 实现, 同步接口)."""
 
     def __init__(self, url: str):
         self.url = url
 
-    async def send(self, topic: str, payload: dict | str):
-        import aiohttp
-        data = json.dumps({"topic": topic, "payload": payload})
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(self.url, data=data,
-                                        headers={"Content-Type": "application/json"}) as resp:
-                    await resp.read()
-            except Exception as e:
-                logger.error(f"[webhook] error: {e}")
+    def send(self, topic: str, payload: dict | str):
+        import urllib.request
+
+        data = json.dumps({"topic": topic, "payload": payload}).encode("utf-8")
+        req = urllib.request.Request(
+            self.url, data=data, method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                resp.read()
+        except Exception as e:
+            logger.error(f"[webhook] error: {e}")
 
     def discover(self, sid: str, model: str, data: dict | None = None):
         pass

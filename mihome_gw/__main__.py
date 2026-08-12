@@ -186,8 +186,12 @@ class App:
         heartbeat_timeout = self.config.heartbeatTimeout
         rediscover_interval = self.config.rediscoverInterval
 
+        # 心跳检查频率：每 min(30, heartbeatTimeout) 秒检查一次
+        heartbeat_tick = min(30, heartbeat_timeout) if heartbeat_timeout > 0 else 30
+        last_rediscover = time.time()
+
         while not self._shutdown:
-            await asyncio.sleep(30)
+            await asyncio.sleep(heartbeat_tick)
 
             # Health check
             elapsed = time.time() - self.last_message_time
@@ -195,14 +199,16 @@ class App:
                 logger.warning(f"[hub] {int(elapsed)}s 无消息, 触发重连...")
                 await self._reconnect()
 
-            # Rediscover
-            try:
-                if self.hub and self.hub._transport:
-                    self.hub._transport.sendto(
-                        b'{"cmd":"whois"}', ("224.0.0.50", 4321)
-                    )
-            except Exception:
-                pass
+            # Rediscover (按 rediscoverInterval 间隔发送 whois)
+            if rediscover_interval > 0 and time.time() - last_rediscover >= rediscover_interval:
+                last_rediscover = time.time()
+                try:
+                    if self.hub and self.hub._transport:
+                        self.hub._transport.sendto(
+                            b'{"cmd":"whois"}', ("224.0.0.50", 4321)
+                        )
+                except Exception:
+                    pass
 
     async def _reconnect(self):
         if self.hub:

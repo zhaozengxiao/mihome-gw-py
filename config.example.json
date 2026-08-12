@@ -1,0 +1,28 @@
+{
+  "port": 9898,
+  "bind": "0.0.0.0",
+  "debug": false,
+  "enable_triggers": true,
+  "doorOpenCooldownMs": 5000,
+  "heartbeatTimeout": 120,
+  "rediscoverInterval": 60,
+  "gateways": [
+    {"ip": "192.168.50.115", "key": "替换为你的网关密钥", "sid": ""}
+  ],
+  "output": {
+    "type": "mqtt",
+    "url": "mqtt://用户名:密码@core-mosquitto:1883",
+    "prefix": "mihome/"
+  },
+  "rules": [
+    {
+      "name": "人体开灯-30秒延时关",
+      "match": {"sid": "158d000258361c", "attr": "state", "equals": true},
+      "target": {"sid": "158d0002b062cd", "attr": "channel_0"},
+      "onValue": true,
+      "offValue": false,
+      "delay": 30,
+      "doorGuard": "158d00032b73ec"
+    }
+  ]
+}

@@ -75,6 +75,9 @@ class TriggerEngine:
         # 控制设备前需要先刷新 token（超过 10s 则重新获取）
         self._last_token_refresh: dict[str, float] = {}
 
+        # 事件循环（用于 call_later 延时控制）
+        self._loop = asyncio.get_running_loop()
+
         # 刚开门离开的设备 SID
         # 用于标记"刚开门出去"的人体传感器，跳过下次触发
         self._just_exited: str | None = None
@@ -166,7 +169,7 @@ class TriggerEngine:
                 pass
             self._last_token_refresh[gw_ip] = now
             # 延迟 0.5s 等待 token 响应
-            asyncio.get_event_loop().call_later(0.5, do_control)
+            self._loop.call_later(0.5, do_control)
         else:
             do_control()
 

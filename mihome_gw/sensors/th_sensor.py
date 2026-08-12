@@ -29,7 +29,7 @@ class THSensor(BaseSensor):
             diff = ts - self.lastData
             if 200 < diff < self.interval:
                 obj["doublePress"] = True
-                asyncio.get_event_loop().call_later(
+                asyncio.get_running_loop().call_later(
                     0.3, lambda: self.hub.emit("data", self.sid, self.className, {"doublePress": False})
                 )
                 self.lastData = None
@@ -46,11 +46,10 @@ class THSensor(BaseSensor):
         temp = data.get("temperature")
         if temp is not None:
             temp = int(temp)
-            if temp == 10000:
-                return None
-            self.temperature = temp / 100.0
-            obj["temperature"] = self.temperature
-            new_data = True
+            if temp != 10000:
+                self.temperature = temp / 100.0
+                obj["temperature"] = self.temperature
+                new_data = True
 
         hum = data.get("humidity")
         if hum is not None:

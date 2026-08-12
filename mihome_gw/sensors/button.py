@@ -29,7 +29,7 @@ class Button(BaseSensor):
             obj["double"] = status == "double_click"
             obj["long"] = status == "long_click_press"
             if status == "click":
-                asyncio.get_event_loop().call_later(
+                asyncio.get_running_loop().call_later(
                     0.1, lambda: self.hub.emit("data", self.sid, self.className, {"click": False})
                 )
             new_data = True

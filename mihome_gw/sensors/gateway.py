@@ -13,6 +13,7 @@ class Gateway(BaseSensor):
 
     def __init__(self, sid: str, ip: str, hub, model: str):
         super().__init__(sid, ip, hub, model)
+        self._loop = asyncio.get_running_loop()
         if "acpartner" in model:
             self.type = model
         else:
@@ -46,7 +47,7 @@ class Gateway(BaseSensor):
         timeout = 130000 if self.hub.proto_major(self.ip) == "2" else 20000
         if self.timeout_handle:
             self.timeout_handle.cancel()
-        self.timeout_handle = asyncio.get_event_loop().call_later(
+        self.timeout_handle = self._loop.call_later(
             timeout / 1000,
             lambda: self.hub.emit("data", self.sid, self.type, {"connected": False}),
         )
@@ -171,7 +172,7 @@ class Gateway(BaseSensor):
                     if not self.dimmer:
                         self.dimmer = self.lastValues["dimmer"]
 
-            asyncio.get_event_loop().call_later(0.2, self._send_rgb)
+            self._loop.call_later(0.2, self._send_rgb)
 
         elif attr == "volume":
             value = max(0, min(100, value))
@@ -190,7 +191,7 @@ class Gateway(BaseSensor):
             }, self.ip)
 
         elif attr in ("on_off_cfg", "mode_cfg", "ws_cfg", "swing_cfg", "relay_status",
-                      "remove_device", "join_permission"):
+                      "remove_device", "join_permission", "temp_cfg"):
             data = {attr: value, "key": self.hub.get_key(self.ip)}
             if attr == "temp_cfg":
                 data["temp_cfg"] = int(value)

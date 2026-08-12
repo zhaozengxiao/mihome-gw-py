@@ -40,7 +40,7 @@ class Hub:
         self._state = "INIT"
         self._transport: asyncio.DatagramTransport | None = None
         self._listeners: dict[str, list] = {}
-        self._loop = asyncio.get_event_loop()
+        self._loop = asyncio.get_running_loop()
 
     def on(self, event: str, callback):
         if event not in self._listeners:
@@ -162,7 +162,7 @@ class Hub:
             def connection_lost(self, exc):
                 self.hub._state = "CLOSED"
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         endpoint_options = {}
         if sys.platform != "win32":
             endpoint_options["reuse_port"] = True
