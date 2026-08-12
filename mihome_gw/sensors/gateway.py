@@ -141,8 +141,59 @@ class Gateway(BaseSensor):
         for sid in sids:
             self.hub.send_message({"cmd": "read", "sid": sid}, self.ip)
 
+    @staticmethod
+    def _normalize_light_value(attr: str, value):
+        """归一化控制值: 兼容 HA MQTT light (template schema) 的取值格式."""
+        if attr == "on":
+            if isinstance(value, str):
+                return value.strip().lower() in ("true", "on", "1")
+            return bool(value)
+        if attr == "dimmer":
+            # HA 亮度命令为 0-255, 内部为 0-100
+            try:
+                v = int(value)
+            except (TypeError, ValueError):
+                return None
+            if v > 100:
+                v = round(v * 100 / 255)
+            return max(0, min(100, v))
+        if attr == "rgb":
+            # 接受 "#RRGGBB" 或 HA 的 "r,g,b"
+            if isinstance(value, str):
+                v = value.strip()
+                if v.startswith("#"):
+                    return v
+                if "," in v:
+                    try:
+                        r, g, b = (int(p) for p in v.split(",")[:3])
+                    except ValueError:
+                        return None
+                    return f"#{r:02X}{g:02X}{b:02X}"
+            if isinstance(value, int):
+                return f"#{value:06X}"
+            return None
+        return value
+
+    def _write(self, data: dict, retry: bool = True) -> None:
+        """发送 write 命令; token 缺失时先请求 get_id_list 并延时重试一次."""
+        key = self.hub.get_key(self.ip)
+        if key is None and retry:
+            self.hub.send_message({"cmd": "get_id_list", "sid": self.sid}, self.ip)
+            self._loop.call_later(0.5, lambda: self._write(data, retry=False))
+            return
+        message = {
+            "cmd": "write", "model": self.type, "sid": self.sid,
+            "short_id": 0, "data": dict(data),
+        }
+        message["data"]["key"] = key
+        self.hub.send_message(message, self.ip)
+
     def control(self, attr: str, value) -> None:
         if attr in ("on", "dimmer", "rgb"):
+            value = self._normalize_light_value(attr, value)
+            if value is None:
+                self.hub.emit("warning", f"Invalid value for {attr}")
+                return
             if self.dimmer is None:
                 self.dimmer = self.lastValues["dimmer"]
             if self.rgb is None:
@@ -176,29 +227,18 @@ class Gateway(BaseSensor):
 
         elif attr == "volume":
             value = max(0, min(100, value))
-            self.hub.send_message({
-                "cmd": "write", "model": self.type, "sid": self.sid,
-                "short_id": 0,
-                "data": {"mid": self.mid or 999, "vol": value, "key": self.hub.get_key(self.ip)},
-            }, self.ip)
+            self._write({"mid": self.mid or 999, "vol": value})
 
         elif attr == "mid":
             self.mid = value
-            self.hub.send_message({
-                "cmd": "write", "model": self.type, "sid": self.sid,
-                "short_id": 0,
-                "data": {"mid": value, "key": self.hub.get_key(self.ip)},
-            }, self.ip)
+            self._write({"mid": value})
 
         elif attr in ("on_off_cfg", "mode_cfg", "ws_cfg", "swing_cfg", "relay_status",
                       "remove_device", "join_permission", "temp_cfg"):
-            data = {attr: value, "key": self.hub.get_key(self.ip)}
+            data = {attr: value}
             if attr == "temp_cfg":
                 data["temp_cfg"] = int(value)
-            self.hub.send_message({
-                "cmd": "write", "model": self.type, "sid": self.sid,
-                "short_id": 0, "data": data,
-            }, self.ip)
+            self._write(data)
 
         else:
             self.hub.emit("warning", f"Unknown attribute {attr}")
@@ -209,8 +249,4 @@ class Gateway(BaseSensor):
         else:
             val = (self.dimmer << 24) | int(self.rgb.replace("#", ""), 16)
 
-        self.hub.send_message({
-            "cmd": "write", "model": self.type, "sid": self.sid,
-            "short_id": 0,
-            "data": {"rgb": val, "key": self.hub.get_key(self.ip)},
-        }, self.ip)
+        self._write({"rgb": val})

@@ -28,11 +28,25 @@ class Curtain(BaseSensor):
         return obj if new_data else None
 
     def control(self, attr: str, value) -> None:
+        if attr == "curtain_level":
+            try:
+                level = max(0, min(100, int(value)))
+            except (TypeError, ValueError):
+                return
+        elif attr == "curtain_cmd":
+            # HA cover 命令话题 (command_topic): open/close
+            if value == "open":
+                level = 100
+            elif value == "close":
+                level = 0
+            else:
+                return  # stop 不支持 (未声明 payload_stop, HA 不显示停止按钮)
+        else:
+            return
+
         message = {
             "cmd": "write", "model": self.className, "sid": self.sid,
-            "short_id": 0, "data": {},
+            "short_id": 0, "data": {"curtain_level": level},
         }
-        if attr == "curtain_level":
-            message["data"]["curtain_level"] = value
         message["data"]["key"] = self.hub.get_key(self.ip)
         self.hub.send_message(message, self.ip)

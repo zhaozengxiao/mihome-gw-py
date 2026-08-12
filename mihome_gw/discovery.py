@@ -145,12 +145,16 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
                 "unique_id": f"{sid}_illum", "device": dev,
             }},
             {"topic": f"homeassistant/light/{sid}/config", "payload": {
-                "name": f"Gateway Light {sid}", "schema": "json",
+                "name": f"Gateway Light {sid}", "schema": "template",
                 "state_topic": state_topic,
-                "command_topic": f"{cmd_topic}/rgb",
-                "brightness_state_topic": state_topic, "brightness_value_template": "{{ value_json.dimmer }}",
+                "state_value_template": "{{ value_json.on | string | lower }}",
+                "command_topic": f"{cmd_topic}/on",
+                "payload_on": "true", "payload_off": "false",
+                "brightness_state_topic": state_topic,
+                "brightness_value_template": "{{ (value_json.dimmer | default(0) | int * 2.55) | round(0) | int }}",
                 "brightness_command_topic": f"{cmd_topic}/dimmer",
-                "rgb_state_topic": state_topic, "rgb_value_template": "{{ value_json.rgb }}",
+                "rgb_state_topic": state_topic,
+                "rgb_value_template": "{{ (value_json.rgb | default('#000000'))[1:3] | int(base=16) }},{{ (value_json.rgb | default('#000000'))[3:5] | int(base=16) }},{{ (value_json.rgb | default('#000000'))[5:7] | int(base=16) }}",
                 "rgb_command_topic": f"{cmd_topic}/rgb",
                 "unique_id": f"{sid}_light", "device": dev,
             }},
@@ -224,9 +228,10 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
         msgs.append({"topic": f"homeassistant/cover/{sid}/config", "payload": {
             "name": _device_name(sid, model), "device_class": "curtain",
             "state_topic": state_topic, "position_template": "{{ value_json.curtain_level }}",
-            "command_topic": f"{cmd_topic}/curtain_level",
+            "command_topic": f"{cmd_topic}/curtain_cmd",
             "set_position_topic": f"{cmd_topic}/curtain_level",
-            "payload_open": "open", "payload_close": "close", "payload_stop": "stop",
+            "payload_open": "open", "payload_close": "close",
+            "position_open": 100, "position_closed": 0,
             "unique_id": sid, "device": dev,
         }})
         return msgs

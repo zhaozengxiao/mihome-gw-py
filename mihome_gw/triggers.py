@@ -148,10 +148,10 @@ class TriggerEngine:
             logger.error(f"[trigger] {rule['target']['sid']} 不支持 Control")
             return
 
-        # 获取网关 IP（用于 token 刷新）
-        gw_ip = self._gateways[0].ip if self._gateways else "192.168.50.115"
+        # 获取网关 IP (用于 token 刷新; 未配置时跳过刷新)
+        gw_ip = self._gateways[0].ip if self._gateways else None
         now = time.monotonic()
-        last_refresh = self._last_token_refresh.get(gw_ip, 0)
+        last_refresh = self._last_token_refresh.get(gw_ip, 0) if gw_ip else 0
         token_age = now - last_refresh
 
         def do_control():
@@ -161,7 +161,7 @@ class TriggerEngine:
                 logger.error(f"[trigger] Control 失败: {e}")
 
         # 如果距离上次刷新 token 超过 10 秒，先刷新 token 再控制
-        if token_age > 10:
+        if token_age > 10 and gw_ip:
             try:
                 # 发送 get_id_list 命令触发网关返回 token
                 self.hub.send_message({"cmd": "get_id_list"}, gw_ip)

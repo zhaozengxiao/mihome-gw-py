@@ -199,6 +199,16 @@ class Hub:
         logger.info(f"[hub] SEND -> {dest[0]}:{dest[1]} {data.decode()}")
         self._transport.sendto(data, dest)
 
+    def send_raw(self, data: bytes, dest: tuple):
+        """Send raw datagram (e.g. multicast whois)."""
+        if self._state == "CLOSED" or not self._transport:
+            return
+        self._transport.sendto(data, dest)
+
+    @property
+    def connected(self) -> bool:
+        return self._state == "CONNECTED" and self._transport is not None
+
     def _on_message(self, msg_buffer: bytes, rinfo):
         if self._state == "CLOSED":
             return
@@ -280,7 +290,10 @@ class Hub:
         try:
             key = self.keys.get(ip) or self.key
             cipher = AES.new(key.encode(), AES.MODE_CBC, iv=IV)
-            encrypted = cipher.encrypt(token.encode("ascii"))
+            # PKCS7 pad: token (e.g. 8 chars) must fill a 16-byte AES block
+            raw = token.encode("ascii")
+            pad = 16 - len(raw) % 16
+            encrypted = cipher.encrypt(raw + bytes([pad]) * pad)
             result = encrypted.hex()
             logger.info(f"[hub] getKey ip={ip} token={token} -> {result}")
             return result
@@ -301,6 +314,7 @@ class Hub:
 
         sensor = dev["ClassName"](sid, ip, self, model)
         self.sensors[sid] = sensor
+        self.sids[sid] = model
         self.emit("device", sensor, name)
         return sensor
 

@@ -23,18 +23,6 @@ logger = logging.getLogger("mihome")
 
 CONFIG_PATH = os.environ.get("CONFIG_PATH", os.path.join(os.path.dirname(__file__), "..", "config.json"))
 
-DEFAULT_RULES = [
-    {
-        "name": "人体开灯-30秒延时关",
-        "match": {"sid": "158d000258361c", "attr": "state", "equals": True},
-        "target": {"sid": "158d0002b062cd", "attr": "channel_0"},
-        "onValue": True,
-        "offValue": False,
-        "delay": 30,
-        "doorGuard": "158d00032b73ec",
-    }
-]
-
 
 def load_config() -> Config:
     try:
@@ -91,20 +79,23 @@ class App:
             logger.error(f"[mqtt] 控制目标不存在或无 Control: {sid}")
             return
 
-        # Boolean conversion
+        # Boolean conversion (兼容 HA 大小写: ON/OFF/True/False)
         v = value
-        if v in ("true", "on", "1"):
-            v = True
-        elif v in ("false", "off", "0"):
-            v = False
+        if isinstance(value, str):
+            v = value.strip().lower()
+            if v in ("true", "on", "1"):
+                v = True
+            elif v in ("false", "off", "0"):
+                v = False
 
         logger.info(f"[mqtt] 收到控制指令 {sid} {attr} = {v}")
 
-        gw_ip = self.config.gateways[0].ip if self.config.gateways else "192.168.50.115"
-        try:
-            self.hub.send_message({"cmd": "get_id_list"}, gw_ip)
-        except Exception:
-            pass
+        # 刷新网关 token (未配置网关时跳过, 控制由设备自身 ip 完成)
+        if self.config.gateways:
+            try:
+                self.hub.send_message({"cmd": "get_id_list"}, self.config.gateways[0].ip)
+            except Exception:
+                pass
 
         if self._loop is None or self._loop.is_closed():
             logger.error("[mqtt] 控制失败: 主事件循环不可用")
@@ -125,7 +116,9 @@ class App:
 
     def setup_triggers(self):
         """Setup the rule engine."""
-        rules = self.config.rules if self.config.rules else DEFAULT_RULES
+        rules = self.config.rules
+        if not rules:
+            logger.info("[mihome] 未配置 rules, 规则引擎无规则可执行")
         self.triggers = TriggerEngine(
             lambda: self.hub,
             self.config.gateways,
@@ -203,8 +196,8 @@ class App:
             if rediscover_interval > 0 and time.time() - last_rediscover >= rediscover_interval:
                 last_rediscover = time.time()
                 try:
-                    if self.hub and self.hub._transport:
-                        self.hub._transport.sendto(
+                    if self.hub and self.hub.connected:
+                        self.hub.send_raw(
                             b'{"cmd":"whois"}', ("224.0.0.50", 4321)
                         )
                 except Exception:
@@ -244,11 +237,13 @@ class App:
         await self.hub.start()
 
         logger.info(
-            f"[mihome] started. listen={self.config.port} gateway=9898 "
+            f"[mihome] started. listen={self.config.port} "
             f"bind={self.config.bind} gateways={len(self.config.gateways)} "
             f"output={self.config.output.type} rules={len(self.config.rules)} "
             f"heartbeatTimeout={self.config.heartbeatTimeout}s"
         )
+        if not self.config.gateways:
+            logger.warning("[mihome] 未配置网关 (gateways 为空), 仅能接收组播消息, 无法发送控制指令")
 
         await self._health_check()
 
