@@ -206,7 +206,7 @@ button{padding:6px 12px;border:none;border-radius:3px;cursor:pointer;font-size:1
 // ============== 工具函数 ==============
 let rules = [], devices = [], logAutoTimer = null, statesTimer = null;
 
-function toast(m,ok){
+function st(m,ok){
   const t=document.getElementById('toast');
   t.textContent=m;t.style.background=ok?'#2e7d32':'#d9534f';t.style.display='block';
   setTimeout(()=>t.style.display='none',2500);
@@ -219,7 +219,7 @@ async function api(p,o){
   return d;
 }
 
-function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'\\\"')}
 
 function norm(v){
   const s=String(v).trim();
@@ -248,8 +248,8 @@ async function refreshDevices(){
       const span=document.createElement('span');
       span.style.cssText='display:inline-block;margin:2px 4px;padding:2px 6px;background:#f0f4ff;border-radius:3px;cursor:pointer;font-size:11px';
       span.textContent=dev.model+' '+dev.sid;
-      span.title='IP: '+dev.ip+'\n点击复制 SID';
-      span.onclick=()=>{navigator.clipboard.writeText(dev.sid);toast('已复制: '+dev.sid)};
+      span.title='IP: '+dev.ip+'\\n点击复制 SID';
+      span.onclick=()=>{navigator.clipboard.writeText(dev.sid);st('已复制: '+dev.sid)};
       ul.appendChild(span);
     });
     // 填充所有下拉
@@ -338,15 +338,15 @@ async function loadRules(){
     document.getElementById('s-rediscover').value=d.rediscoverInterval;
     document.getElementById('s-debug').value=String(d.debug);
     document.getElementById('s-web-port').value=d.web_port;
-  }catch(e){toast('加载失败: '+e.message,false)}
+  }catch(e){st('加载失败: '+e.message,false)}
 }
 
 async function saveRules(){
   const nr=collectRules();
   try{
     const d=await api('/api/rules',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rules:nr})});
-    rules=d.rules;toast('已保存 ('+rules.length+' 条规则)');renderRules();
-  }catch(e){toast('保存失败: '+e.message,false)}
+    rules=d.rules;st('已保存 ('+rules.length+' 条规则)');renderRules();
+  }catch(e){st('保存失败: '+e.message,false)}
 }
 
 // ============== 设备状态 ==============
@@ -359,7 +359,7 @@ async function loadStates(){
       const vals=Object.entries(s.vals||{}).filter(([k])=>!['voltage','percent'].includes(k));
       card.innerHTML=
         '<div class="model">'+esc(s.model)+'</div>'+
-        '<div class="sid" onclick="navigator.clipboard.writeText(\''+esc(s.sid)+'\');toast(\'已复制: '+esc(s.sid)+'\')">'+esc(s.sid)+'</div>'+
+        '<div class="sid" onclick="navigator.clipboard.writeText(\\''+esc(s.sid)+'\\');st(\\'已复制: '+esc(s.sid)+'\\')">'+esc(s.sid)+'</div>'+
         '<div class="vals">'+vals.map(([k,v])=>'<span>'+esc(k)+': '+esc(v)+'</span>').join('')+'</div>';
       grid.appendChild(card);
     }
@@ -393,24 +393,24 @@ function toggleLogAuto(){
 async function testMqtt(){
   const topic=document.getElementById('test-topic').value.trim();
   const payload=document.getElementById('test-payload').value;
-  if(!topic){toast('请输入主题',false);return}
+  if(!topic){st('请输入主题',false);return}
   try{
     const d=await api('/api/test/mqtt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,payload})});
     document.getElementById('test-mqtt-result').textContent='已发送 -> '+topic+' = '+payload;
-    toast('MQTT 已发送');
-  }catch(e){toast('MQTT 失败: '+e.message,false)}
+    st('MQTT 已发送');
+  }catch(e){st('MQTT 失败: '+e.message,false)}
 }
 
 async function testTrigger(){
   const sid=document.getElementById('test-trigger-sid').value.trim();
   const attr=document.getElementById('test-trigger-attr').value;
   const value=document.getElementById('test-trigger-value').value;
-  if(!sid){toast('请输入 SID',false);return}
+  if(!sid){st('请输入 SID',false);return}
   try{
     const d=await api('/api/test/trigger',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid,attr,value:norm(value)})});
     document.getElementById('test-trigger-result').textContent='已触发: '+sid+' '+attr+' = '+value;
-    toast('已模拟触发');
-  }catch(e){toast('触发失败: '+e.message,false)}
+    st('已模拟触发');
+  }catch(e){st('触发失败: '+e.message,false)}
 }
 
 // ============== 配置导出导入 ==============
@@ -419,8 +419,8 @@ async function exportConfig(){
     const d=await api('/api/config/export');
     const blob=new Blob([JSON.stringify(d.config,null,2)],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mihome-gw-config.json';a.click();
-    toast('已导出');
-  }catch(e){toast('导出失败: '+e.message,false)}
+    st('已导出');
+  }catch(e){st('导出失败: '+e.message,false)}
 }
 
 async function importConfig(ev){
@@ -428,9 +428,9 @@ async function importConfig(ev){
   try{
     const text=await file.text();
     const d=await api('/api/config/import',{method:'POST',headers:{'Content-Type':'application/json'},body:text});
-    toast('已导入 ('+d.rules.length+' 条规则)');
+    st('已导入 ('+d.rules.length+' 条规则)');
     loadRules();
-  }catch(e){toast('导入失败: '+e.message,false)}
+  }catch(e){st('导入失败: '+e.message,false)}
 }
 
 // ============== 设置 ==============
@@ -445,8 +445,8 @@ async function saveSettings(){
   };
   try{
     const d=await api('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)});
-    toast('已保存'+(d.hot_reload?' (已生效)':' (部分需重启)'));
-  }catch(e){toast('保存失败: '+e.message,false)}
+    st('已保存'+(d.hot_reload?' (已生效)':' (部分需重启)'));
+  }catch(e){st('保存失败: '+e.message,false)}
 }
 
 // ============== 初始化 ==============
