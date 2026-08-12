@@ -290,10 +290,14 @@ class Hub:
         try:
             key = self.keys.get(ip) or self.key
             cipher = AES.new(key.encode(), AES.MODE_CBC, iv=IV)
-            # PKCS7 pad: token (e.g. 8 chars) must fill a 16-byte AES block
+            # 网关仅接受与 token 等长的密文 (无 PKCS7 填充, 实测 "Invalid key len")
             raw = token.encode("ascii")
-            pad = 16 - len(raw) % 16
-            encrypted = cipher.encrypt(raw + bytes([pad]) * pad)
+            if len(raw) % 16 != 0:
+                logger.warning(
+                    f"[hub] getKey ip={ip}: token 长度 {len(raw)} 非 16 倍数, 无法生成 key"
+                )
+                return None
+            encrypted = cipher.encrypt(raw)
             result = encrypted.hex()
             logger.info(f"[hub] getKey ip={ip} token={token} -> {result}")
             return result
