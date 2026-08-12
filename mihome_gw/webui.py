@@ -135,8 +135,8 @@ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'
 
 function render(){
   const tb=document.querySelector('#rules tbody');tb.innerHTML='';
-  if(!rules.length){tb.innerHTML='<tr><td colspan="7" class="muted">暂无规则</td></tr>';return}
-  function tiStr(r){const t=r.timeInactive||{};return (t.start||'')+'~'+(t.end||'')}
+  if(!rules.length){tb.innerHTML='<tr><td colspan=\"8\" class=\"muted\">暂无规则</td></tr>';return}
+  rules.forEach((r,i)=>{
     const m=r.match||{},t=r.target||{};
     const tr=document.createElement('tr');
     tr.innerHTML=`
