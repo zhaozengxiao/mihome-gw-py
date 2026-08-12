@@ -206,7 +206,7 @@ class WebUI:
 
     # ---- routes ----
     async def _index(self, request):
-        return web.Response(text=HTML, content_type="text/html; charset=utf-8")
+        return web.Response(text=HTML, content_type="text/html", charset="utf-8")
 
     async def _get_rules(self, request):
         cfg = self._main.config
