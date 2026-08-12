@@ -254,7 +254,7 @@ async function refreshDevices(){
     });
     // 填充所有下拉
     document.querySelectorAll('select.sid-sel').forEach(sel=>{
-      const cur=sel.value;
+      const cur=sel.value || sel.getAttribute('data-cur') || '';
       sel.innerHTML='<option value="">(选SID)</option>'+devices.map(d=>'<option value="'+esc(d.sid)+'">'+esc(d.model+' '+d.sid)+'</option>').join('');
       if(cur) sel.value=cur;
     });
@@ -272,20 +272,20 @@ function renderRules(){
     tr.innerHTML=
       '<td><div class="toggle'+(enabled?' on':'')+'" onclick="toggleRule('+i+')"></div></td>'+
       '<td><input data-f="name" value="'+esc(r.name)+'" placeholder="名称"></td>'+
-      '<td><select class="sid-sel" data-f="match.sid" onchange="syncSid(this)"></select>'+
+      '<td><select class="sid-sel" data-f="match.sid" data-cur="'+esc(m.sid)+'" onchange="syncSid(this)"></select>'+
         '<div style="display:flex;gap:2px;margin-top:2px">'+
         '<select data-f="match.attr" style="flex:1"><option value="state"'+('state'==m.attr?' selected':'')+'>state</option><option value="channel_0"'+('channel_0'==m.attr?' selected':'')+'>ch0</option><option value="channel_1"'+('channel_1'==m.attr?' selected':'')+'>ch1</option></select>'+
         '<select data-f="match.equals" style="flex:1"><option value="true"'+('true'==String(m.equals)?' selected':'')+'>true</option><option value="false"'+('false'==String(m.equals)?' selected':'')+'>false</option></select></div></td>'+
-      '<td><select class="sid-sel" data-f="target.sid" onchange="syncSid(this)"></select>'+
+      '<td><select class="sid-sel" data-f="target.sid" data-cur="'+esc(t.sid)+'" onchange="syncSid(this)"></select>'+
         '<select data-f="target.attr" style="margin-top:2px"><option value="channel_0"'+('channel_0'==t.attr?' selected':'')+'>channel_0</option><option value="channel_1"'+('channel_1'==t.attr?' selected':'')+'>channel_1</option><option value="state"'+('state'==t.attr?' selected':'')+'>state</option></select></td>'+
-      '<td><select class="sid-sel" data-f="condition.sid" onchange="syncSid(this)"></select>'+
+      '<td><select class="sid-sel" data-f="condition.sid" data-cur="'+esc(c.sid||'')+'" onchange="syncSid(this)"></select>'+
         '<div style="display:flex;gap:2px;margin-top:2px">'+
         '<select data-f="condition.attr" style="flex:1"><option value="">(attr)</option><option value="state"'+('state'==c.attr?' selected':'')+'>state</option><option value="channel_0"'+('channel_0'==c.attr?' selected':'')+'>ch0</option></select>'+
         '<select data-f="condition.equals" style="flex:1"><option value="">(=)</option><option value="true"'+('true'==String(c.equals)?' selected':'')+'>true</option><option value="false"'+('false'==String(c.equals)?' selected':'')+'>false</option></select></div></td>'+
       '<td><input data-f="onValue" value="'+esc(r.onValue)+'" placeholder="开" style="margin-bottom:2px">'+
         '<input data-f="offValue" value="'+esc(r.offValue)+'" placeholder="关"></td>'+
       '<td><input data-f="delay" value="'+esc(r.delay)+'" type="number" step="1" style="width:50px"></td>'+
-      '<td><select class="sid-sel" data-f="doorGuard" onchange="syncSid(this)"></select></td>'+
+      '<td><select class="sid-sel" data-f="doorGuard" data-cur="'+esc(r.doorGuard||'')+'" onchange="syncSid(this)"></select></td>'+
       '<td><div style="display:flex;gap:2px;align-items:center">'+
         '<input data-f="tiStart" value="'+esc(ti.start||'')+'" placeholder="22:00" style="width:48px">'+
         '<span style="color:#888">~</span>'+
