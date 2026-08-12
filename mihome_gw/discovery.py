@@ -178,7 +178,7 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
         msgs += [
             {"topic": f"homeassistant/sensor/{sid}_action/config", "payload": {
                 "name": _device_name(sid, model),
-                "state_topic": state_topic, "value_template": "{{ value_json | tojson }}",
+                "state_topic": state_topic, "value_template": "{{ value_json.action }}",
                 "unique_id": f"{sid}_action", "device": dev,
             }},
             {"topic": f"homeassistant/sensor/{sid}_bat/config", "payload": {
@@ -194,7 +194,7 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
         msgs += [
             {"topic": f"homeassistant/sensor/{sid}_action/config", "payload": {
                 "name": _device_name(sid, model),
-                "state_topic": state_topic, "value_template": "{{ value_json | tojson }}",
+                "state_topic": state_topic, "value_template": "{{ value_json.action }}",
                 "unique_id": f"{sid}_action", "device": dev,
             }},
             {"topic": f"homeassistant/sensor/{sid}_bat/config", "payload": {
@@ -241,7 +241,7 @@ def build_discovery(sid: str, model: str, prefix: str = "mihome/") -> list[dict]
         msgs += [
             {"topic": f"homeassistant/sensor/{sid}_action/config", "payload": {
                 "name": _device_name(sid, model),
-                "state_topic": state_topic, "value_template": "{{ value_json | tojson }}",
+                "state_topic": state_topic, "value_template": "{{ value_json.action }}",
                 "unique_id": f"{sid}_action", "device": dev,
             }},
             {"topic": f"homeassistant/sensor/{sid}_bat/config", "payload": {

@@ -10,9 +10,12 @@ class Button(BaseSensor):
 
     def __init__(self, sid: str, ip: str, hub, model: str):
         super().__init__(sid, ip, hub, model)
-        self.click: bool | None = None
-        self.double: bool | None = None
-        self.long: bool | None = None
+
+    def _schedule_reset(self):
+        """0.5s 后发布 idle, 复位动作状态."""
+        asyncio.get_running_loop().call_later(
+            0.5, lambda: self.hub.emit("data", self.sid, self.className, {"action": "idle"})
+        )
 
     def get_data(self, data: dict) -> dict | None:
         new_data = False
@@ -25,18 +28,17 @@ class Button(BaseSensor):
 
         status = data.get("status")
         if status is not None:
-            obj["click"] = status == "click"
-            obj["double"] = status == "double_click"
-            obj["long"] = status == "long_click_press"
-            if status == "click":
-                asyncio.get_running_loop().call_later(
-                    0.1, lambda: self.hub.emit("data", self.sid, self.className, {"click": False})
-                )
+            action = {
+                "click": "click",
+                "double_click": "double_click",
+                "long_click_press": "long_click_press",
+            }.get(status)
+            if action:
+                obj["action"] = action
+                self._schedule_reset()
             new_data = True
         elif data.get("voltage") is not None:
-            obj["click"] = False
-            obj["double"] = False
-            obj["long"] = False
+            obj["action"] = "idle"
             new_data = True
 
         return obj if new_data else None
