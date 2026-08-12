@@ -336,6 +336,10 @@ class TriggerEngine:
             if dg and match_sensor and hasattr(match_sensor, "no_motion"):
                 self._last_motion[sid] = time.time() * 1000
 
+            # 跳过：规则被禁用
+            if rule.get("enabled") is False:
+                continue
+
             # 跳过：刚开门离开（门磁 on_door 中设置的标记）
             if self._just_exited == sid:
                 self._just_exited = None

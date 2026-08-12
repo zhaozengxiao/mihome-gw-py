@@ -227,6 +227,8 @@ class App:
     async def run(self):
         """Start the application."""
         self._loop = asyncio.get_running_loop()
+        from .log_capture import install as install_log_capture
+        install_log_capture()
         self.setup_output()
 
         self.hub = Hub(
