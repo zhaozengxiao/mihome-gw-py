@@ -72,8 +72,7 @@ class Hub:
                 elif key == "button_1":
                     data["channel_1"] = val
                 elif key == "dual_channel":
-                    if val == "click":
-                        data["dual_channel"] = "both_click"
+                    data["dual_channel"] = val
                 else:
                     data[key] = val
         return data
@@ -276,9 +275,13 @@ class Hub:
                     msg["cmd"] = "get_id_list_ack"
 
             if msg.get("data") and (msg.get("cmd") == "report" or msg.get("cmd", "").endswith("_ack")):
-                if msg.get("cmd") == "write_ack":
-                    logger.info(f"[hub] WRITE_ACK from {ip}: {json.dumps(msg['data'])}")
-                sensor.on_message(msg)
+                try:
+                    if msg.get("cmd") == "write_ack":
+                        logger.info(f"[hub] WRITE_ACK from {ip}: {json.dumps(msg['data'])}")
+                    sensor.on_message(msg)
+                except Exception as e:
+                    # 单个传感器解析失败不能中断整条消息/后续处理
+                    logger.error(f"[hub] 传感器解析异常 sid={sid}: {e}")
 
         self.emit("message", msg)
 

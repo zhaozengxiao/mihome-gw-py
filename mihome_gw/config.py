@@ -95,7 +95,11 @@ class Config:
         mqtt_server = opt.get("mqtt_server", "core-mosquitto")
         mqtt_port = opt.get("mqtt_port", 1883)
 
-        mqtt_url = f"mqtt://{mqtt_user}:{mqtt_password}@{mqtt_server}:{mqtt_port}"
+        # 用户/密码均为空时省略认证段, 避免 mqtt://:@host 空用户名被拒
+        if mqtt_user and mqtt_password:
+            mqtt_url = f"mqtt://{mqtt_user}:{mqtt_password}@{mqtt_server}:{mqtt_port}"
+        else:
+            mqtt_url = f"mqtt://{mqtt_server}:{mqtt_port}"
 
         config = cls()
         config.gateways = [

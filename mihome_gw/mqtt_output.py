@@ -47,37 +47,54 @@ class MqttOutput:
 
     def _on_message(self, client, userdata, msg):
         topic = msg.topic
-        payload = msg.payload.decode()
+        try:
+            payload = msg.payload.decode()
+        except UnicodeDecodeError:
+            logger.warning(f"[mqtt] 忽略非 UTF-8 消息: {topic}")
+            return
         if self.command_handler:
             self.command_handler(topic, payload)
 
     def connect(self):
         """Parse MQTT URL and connect."""
-        # Format: mqtt://user:pass@host:port
+        # Format: mqtt://user:pass@host:port | mqtt://host:port | mqtts://...
         url = self.url
+        use_tls = False
         if url.startswith("mqtt://"):
             url = url[7:]
         elif url.startswith("mqtts://"):
             url = url[8:]
+            use_tls = True
 
-        auth, _, hostpart = url.partition("@")
-        if ":" in auth:
-            user, password = auth.split(":", 1)
-            self.client.username_pw_set(user, password)
+        # 仅当存在 "@" 时才拆分认证段 (无认证 URL 不能误当作 user:pass)
+        if "@" in url:
+            auth, _, hostpart = url.partition("@")
+            if ":" in auth:
+                user, password = auth.split(":", 1)
+                self.client.username_pw_set(user, password)
+        else:
+            hostpart = url
+
         host, _, port_str = hostpart.partition(":")
-        port = int(port_str) if port_str else 1883
+        port = int(port_str) if port_str else (8883 if use_tls else 1883)
 
+        if use_tls:
+            self.client.tls_set()
         self.client.connect_async(host, port, 60)
         self.client.loop_start()
 
     def stop(self):
-        self.client.loop_stop()
         self.client.disconnect()
+        self.client.loop_stop()
 
     def send(self, topic: str, payload: dict | str):
         """Publish a message to MQTT."""
         full_topic = self.prefix + topic
         data = json.dumps(payload) if isinstance(payload, dict) else payload
+        if not self._connected:
+            # broker 不可达时丢弃, 避免 paho 无限内存队列
+            logger.warning(f"[mqtt] 未连接, 丢弃消息: {full_topic}")
+            return
         self.client.publish(full_topic, data, qos=0)
 
     def discover(self, sid: str, model: str, data: dict | None = None):

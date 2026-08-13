@@ -118,6 +118,12 @@ class App:
 
     def setup_triggers(self):
         """Setup the rule engine."""
+        # 取消旧引擎的定时器, 防止热重载后旧规则继续控制设备
+        if self.triggers:
+            try:
+                self.triggers.cancel_all()
+            except Exception:
+                pass
         rules = self.config.rules
         if not rules:
             logger.info("[mihome] 未配置 rules, 规则引擎无规则可执行")

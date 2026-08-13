@@ -19,6 +19,7 @@ class THSensor(BaseSensor):
         self.humidity: float | None = None
         self.pressure: float | None = None
         self.lastData: float | None = None
+        self._dp_timer = None
 
     def get_data(self, data: dict) -> dict | None:
         new_data = False
@@ -29,7 +30,9 @@ class THSensor(BaseSensor):
             diff = ts - self.lastData
             if 200 < diff < self.interval:
                 obj["doublePress"] = True
-                asyncio.get_running_loop().call_later(
+                if self._dp_timer:
+                    self._dp_timer.cancel()
+                self._dp_timer = asyncio.get_running_loop().call_later(
                     0.3, lambda: self.hub.emit("data", self.sid, self.className, {"doublePress": False})
                 )
                 self.lastData = None

@@ -24,7 +24,10 @@ def main():
     mqtt_server = opt.get("mqtt_server", "core-mosquitto")
     mqtt_port = opt.get("mqtt_port", 1883)
 
-    mqtt_url = f"mqtt://{mqtt_user}:{mqtt_password}@{mqtt_server}:{mqtt_port}"
+    if mqtt_user and mqtt_password:
+        mqtt_url = f"mqtt://{mqtt_user}:{mqtt_password}@{mqtt_server}:{mqtt_port}"
+    else:
+        mqtt_url = f"mqtt://{mqtt_server}:{mqtt_port}"
 
     config = {
         "port": 9898,

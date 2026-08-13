@@ -10,10 +10,13 @@ class Button(BaseSensor):
 
     def __init__(self, sid: str, ip: str, hub, model: str):
         super().__init__(sid, ip, hub, model)
+        self._reset_timer = None
 
     def _schedule_reset(self):
-        """0.5s 后发布 idle, 复位动作状态."""
-        asyncio.get_running_loop().call_later(
+        """0.5s 后发布 idle, 复位动作状态 (新动作取消旧定时器, 避免快速连按被提前 idle 覆盖)."""
+        if self._reset_timer:
+            self._reset_timer.cancel()
+        self._reset_timer = asyncio.get_running_loop().call_later(
             0.5, lambda: self.hub.emit("data", self.sid, self.className, {"action": "idle"})
         )
 

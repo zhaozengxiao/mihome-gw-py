@@ -215,6 +215,12 @@ class TriggerEngine:
                 self._timers[key].cancel()
                 del self._timers[key]
 
+    def cancel_all(self):
+        """取消全部定时器 (规则热重载/重连时调用, 防止旧规则继续控制设备)."""
+        for task in self._timers.values():
+            task.cancel()
+        self._timers.clear()
+
     async def _start_timer(self, rule: dict, delay_ms: int):
         """
         异步延时任务：等待 delay_ms 毫秒后执行关灯逻辑。
