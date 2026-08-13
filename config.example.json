@@ -6,6 +6,9 @@
   "doorOpenCooldownMs": 5000,
   "heartbeatTimeout": 120,
   "rediscoverInterval": 60,
+  "web_enabled": true,
+  "web_port": 8080,
+  "web_bind": "0.0.0.0",
   "gateways": [
     {"ip": "192.168.50.115", "key": "替换为你的网关密钥", "sid": ""}
   ],
@@ -21,8 +24,7 @@
       "target": {"sid": "158d0002b062cd", "attr": "channel_0"},
       "onValue": true,
       "offValue": false,
-      "delay": 30,
-      "doorGuard": "158d00032b73ec"
+      "delay": 30
     }
   ]
 }

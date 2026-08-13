@@ -11,6 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY mihome_gw/ ./mihome_gw/
 COPY options2config.py run.sh ./
+# 无 /data/options.json 时的兜底配置 (用户可挂载 config.json 覆盖)
+COPY config.example.json ./config.json
 
 EXPOSE 9898/udp
 EXPOSE 8080/tcp
