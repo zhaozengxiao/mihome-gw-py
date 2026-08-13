@@ -13,6 +13,7 @@ COPY mihome_gw/ ./mihome_gw/
 COPY options2config.py run.sh ./
 
 EXPOSE 9898/udp
+EXPOSE 8080/tcp
 
 RUN chmod +x /app/run.sh
 

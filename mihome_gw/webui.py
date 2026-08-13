@@ -443,6 +443,7 @@ async function importConfig(ev){
     const d=await api('/api/config/import',{method:'POST',headers:{'Content-Type':'application/json'},body:text});
     st('已导入 ('+d.rules.length+' 条规则)');
     loadRules();
+    if(d.note) console.log(d.note);
   }catch(e){st('导入失败: '+e.message,false)}
 }
 
@@ -552,7 +553,10 @@ class WebUI:
     # ---- 日志 ----
     async def _get_logs(self, request):
         q = request.query.get("q", "").strip()
-        n = min(int(request.query.get("n", 100)), 200)
+        try:
+            n = min(int(request.query.get("n", 100)), 200)
+        except ValueError:
+            n = 100
         logs = grep_logs(q, n) if q else get_logs(n)
         return web.json_response({"logs": logs})
 
@@ -627,9 +631,35 @@ class WebUI:
                 json.dump(body, f, indent=2, ensure_ascii=False)
         except Exception as e:
             return web.json_response({"error": f"写文件失败: {e}"}, status=500)
-        # 重新加载配置 (重启线程)
-        logger.info("[webui] 配置已导入, 请重启进程生效")
-        return web.json_response({"ok": True, "rules": body.get("rules", [])})
+        # 热更新内存配置 (规则立即生效; 网关 key/端口等需重启)
+        from .config import GatewayConfig, OutputConfig
+        cfg = self._main.config
+        cfg.rules = body.get("rules", [])
+        cfg.gateways = [
+            GatewayConfig(ip=g["ip"], key=g["key"], sid=g.get("sid", ""))
+            for g in body.get("gateways", [])
+        ]
+        for k in ("port", "bind", "enable_triggers", "doorOpenCooldownMs",
+                  "heartbeatTimeout", "rediscoverInterval", "debug",
+                  "web_enabled", "web_port", "web_bind"):
+            if k in body:
+                setattr(cfg, k, body[k])
+        if isinstance(body.get("output"), dict):
+            o = body["output"]
+            cfg.output = OutputConfig(
+                type=o.get("type", "console"),
+                url=o.get("url", ""),
+                prefix=o.get("prefix", "mihome/"),
+            )
+        try:
+            self._main.setup_triggers()
+        except Exception as e:
+            logger.warning(f"[webui] 导入后规则重载失败: {e}")
+        logger.info("[webui] 配置已导入, 规则已热生效 (网关连接参数需重启进程)")
+        return web.json_response({
+            "ok": True, "rules": body.get("rules", []),
+            "note": "规则已生效; 网关/输出/MQTT 等连接参数需重启进程",
+        })
 
     # ---- 设备列表（供前端填充下拉）----
     async def _get_devices(self, request):
