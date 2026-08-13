@@ -35,6 +35,9 @@ def main():
         "debug": bool(opt.get("debug", False)),
         "enable_triggers": opt.get("enable_triggers", True) is not False,
         "doorOpenCooldownMs": door_cooldown,
+        "web_enabled": opt.get("web_enabled", True),
+        "web_port": int(opt.get("web_port", 8080)),
+        "web_bind": opt.get("web_bind", "0.0.0.0"),
         "gateways": [
             {"ip": opt["gateway_ip"], "key": opt["gateway_key"], "sid": ""}
         ],

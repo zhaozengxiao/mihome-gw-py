@@ -108,6 +108,9 @@ class Config:
         config.output = OutputConfig(type="mqtt", url=mqtt_url, prefix="mihome/")
         config.debug = bool(opt.get("debug", False))
         config.enable_triggers = opt.get("enable_triggers", True) is not False
+        config.web_enabled = opt.get("web_enabled", True)
+        config.web_port = int(opt.get("web_port", 8080))
+        config.web_bind = opt.get("web_bind", "0.0.0.0")
         config.doorOpenCooldownMs = door_cooldown
         config.rules = opt.get("rules", [])
         return config
